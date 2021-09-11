@@ -1,6 +1,11 @@
 ### Python + FastAPI + Mangum + AWS Lambda Container
 
-A demo project to test the AWS Lambda container support with Python FastAPI framework
+A demo project to test the AWS Lambda container support with Python FastAPI framework... in time this will be made specific to model-serving.
+
+This setup is nice because
+1. You can serve many endpoints via 1 lambda, which *at minimum* is nice for managing subtasks, e.g., `/predict/logistic` and `predict/xgboost`
+2. It uses a container architecture, which means you don't need to copy/paste code into lambda. ("But I use [chalice](https://github.com/aws/chalice)!" Ok. But I think you can run into issues with ["heavy"](https://medium.com/analytics-vidhya/python-fastapi-and-aws-lambda-container-3e524c586f01) (DL) applications).
+
 
 Write up [here](https://medium.com/analytics-vidhya/python-fastapi-and-aws-lambda-container-3e524c586f01)
 
