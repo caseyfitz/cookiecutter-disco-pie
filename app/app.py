@@ -21,9 +21,7 @@ app = FastAPI()
 #   Logging configuration                                                     #
 ###############################################################################
 
-logging_config.configure_logging(
-    level="DEBUG", service="Helloworld", instance=str(uuid.uuid4())
-)
+logging_config.configure_logging(level="DEBUG", service="Helloworld", instance=str(uuid.uuid4()))
 
 ###############################################################################
 #   Error handlers configuration                                              #

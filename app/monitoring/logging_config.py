@@ -1,17 +1,17 @@
-import os
-import uuid
 import logging
 import json
+import uuid
 
 from json import JSONEncoder
 from pythonjsonlogger import jsonlogger
 from datetime import datetime
 from logging.config import dictConfig
 
+
 # Custom JSON encoder which enforce standard ISO 8601 format, UUID format
 class ModelJsonEncoder(JSONEncoder):
     def default(self, o):
-        if isinstance(o, UUID):
+        if isinstance(o, uuid.UUID):
             return str(o)
         if isinstance(o, datetime):
             return o.isoformat()
@@ -62,9 +62,7 @@ def configure_logging(level="DEBUG", service=None, instance=None):
                     "json_encoder": ModelJsonEncoder,
                 }
             },
-            "filters": {
-                "default": {"()": LogFilter, "service": service, "instance": instance}
-            },
+            "filters": {"default": {"()": LogFilter, "service": service, "instance": instance}},
             "handlers": {
                 "default_handler": {
                     "class": "logging.StreamHandler",
