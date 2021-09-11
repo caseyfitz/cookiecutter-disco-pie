@@ -21,7 +21,7 @@ app = FastAPI()
 #   Logging configuration                                                     #
 ###############################################################################
 
-logging_config.configure_logging(level='DEBUG', service='Helloworld', instance=str(uuid.uuid4()))
+logging_config.configure_logging(level="DEBUG", service="Helloworld", instance=str(uuid.uuid4()))
 
 ###############################################################################
 #   Error handlers configuration                                              #
@@ -42,8 +42,8 @@ app.add_middleware(CorrelationIdMiddleware)
 #   Routers configuration                                                     #
 ###############################################################################
 
-app.include_router(hello_world.router, prefix='/hello', tags=['hello'])
-app.include_router(goodbye_world.router, prefix='/goodbye', tags=['goodbye'])
+app.include_router(hello_world.router, prefix="/hello", tags=["hello"])
+app.include_router(goodbye_world.router, prefix="/goodbye", tags=["goodbye"])
 
 ###############################################################################
 #   Handler for AWS Lambda                                                    #
