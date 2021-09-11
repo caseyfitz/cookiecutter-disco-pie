@@ -24,3 +24,7 @@ create_ecr_repository: authenticate_ecr
 deploy_to_ecr: build_image authenticate_ecr
 	docker tag  $(LAMBDA_AND_CONTAINER_NAME):latest $(ECR_URI)/$(LAMBDA_AND_CONTAINER_NAME):latest
 	docker push $(ECR_URI)/$(LAMBDA_AND_CONTAINER_NAME):latest
+
+lint:
+	black app
+	flake8 app
