@@ -191,7 +191,7 @@ You should see a response body like
 
 Once your secure endpoint is ready to deploy, from the API Gateway console, select your `POST` method and under the Actions dropdown, choose "Deploy API"
 
-1. You will be ased to select a stage of deployment. The default stage is `default`, but you could have multiple stages, e.g., demo, staging, production, etc.
+1. You will be asked to select a stage of deployment. The default stage is `default`, but you could have multiple stages, e.g., demo, staging, production, etc.
 2. Enter a description for your deployment then click the "Deploy" button.
 3. You will be taken to the Stages panel, where you can manage the stage, and see Deployment History.
 
