@@ -1,236 +1,256 @@
-### Python + FastAPI + Mangum + AWS Lambda Container
+# Deploying a containerized, serverless, and secure REST API
 
-A demo project to test the AWS Lambda container support with Python FastAPI framework... in time this will be made specific to model-serving.
+This repository walks through the end-to-end deployment of a secure, serverless, containerized REST API endpoint.
 
-This setup is nice because
-1. You can serve many endpoints via 1 lambda, which *at minimum* is nice for managing subtasks, e.g., `/predict/logistic` and `predict/xgboost`
-2. It uses a container architecture, which means you don't need to copy/paste code into lambda. ("But I use [chalice](https://github.com/aws/chalice)!" Ok. But I think you can run into issues with ["heavy"](https://medium.com/analytics-vidhya/python-fastapi-and-aws-lambda-container-3e524c586f01) (DL) applications).
+[FastAPI](https://fastapi.tiangolo.com) and [Magnum](https://mangum.io) are used implement a [containerized](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html), serverless [ASGI](https://asgi.readthedocs.io/en/latest/) application via [AWS Lambda](https://aws.amazon.com/lambda/). A secure endpoint for this application is created using [AWS API Gateway](https://aws.amazon.com/api-gateway/). Authorization is managed using [AWS Identity and Access Management](https://aws.amazon.com/iam/).
 
+This architecture enables serving many routes using 1 Lambda, with minimal time spent in the AWS console. The containerized approach means you can't use [Chalice](https://github.com/aws/chalice) for deployment, at least for now. However, as the original contributor of this example [notes](https://medium.com/analytics-vidhya/python-fastapi-and-aws-lambda-container-3e524c586f01),
 
-Write up [here](https://medium.com/analytics-vidhya/python-fastapi-and-aws-lambda-container-3e524c586f01)
+>The container support is very useful to deploy applications that could not pass Lambda restrictions or that use an unsupported runtime. It is especially useful for Python applications which embed Deep Learning or Machine Learning models because the librairies and models are usually too heavy to be deployed on AWS Lambda, even when using Lambda layers.
 
-### Install dependencies
+Most steps that do not require the AWS console can be automated using the included `Makefile`
 
-A requirements file declare all dependencies (Mangum, FastAPI, Uvicorn, ...). Use the following command to install the reuqired dependencies (For Python 3.8.5)
+## hello-lambda overview
+
+The application, container name, lambda functions, etc., are referred to as `hello-lambda` throuhgout.
+
+There are two routes
+1. A `GET` request to `/hello` returns "Hello, World"
+2. A `GET` request to `/goodbye` returns "Goodbye, World"
+
+Although both routes invoke FastAPI `router.get` methods, eventually, when calling the routes via the AWS API Gateway, we will make a `POST` request containing (in addition to authorization signatures) `JSON` that specifies the resource, path, and method within the route. For example, the `/hello` route is invoked using a `POST` request containing the following `JSON` (all fields are **required**)
+
+```json
+{
+        "resource": "/hello",
+        "path": "/hello/",
+        "httpMethod": "GET",
+        "multiValueQueryStringParameters": {},
+        "requestContext": {}
+    }
+```
+
+See below for more details.
+
+## Prerequisites
+
+1. [Docker](https://www.docker.com) for building the application image
+
+2. AWS access to
+   * Lambda, for deploying the application
+   * Elastic Container Registry (ECR), for hosting the application image
+   * API Gateway, for deploying the endpoint used to invoke the Lambda function
+   * Identity and Access Management (IAM), for creating the role and credentials used to make authorized requests to the API
+
+3. [Anaconda](https://www.anaconda.com/products/individual-d), for managing the development requirements
+4. To run all `make` functions, you'll need a `.env` in the repository root directory containing
+5. To run the example in `examples/`, you will need to add some additional variables to the `.env` which will be generated as you follow the steps below
 
 ```
-pip install -r ./requirements.txt
+# Asume .env contains
+# AWS_ACCOUNT_ID
+# AWS_REGION
+# AWS_LAMBDA_ROLE_ARN (see "Create Lambda function" section below)
 ```
 
-### Run locally
+## Install dependencies
 
-You can either use the following command :
+For local development,
+1. Create the `hello-lambda` environment using `make create_environment`
+2. Activate environment using `conda activate hello-lambda`
+3. Install development requirements using `make requirements`
 
-```
-python -m app.ap
-```
 
-Or deploy on uvicorn :
+## Run the app locally
+
+Deploy on uvicorn:
 
 ```
 uvicorn app.app:app --reload --host 0.0.0.0 --port 5000
 ```
 
-You can test the application by using the following command : 
+You can test the application by using the following command: 
+
+The `/hello` route
 
 ```
 curl http://localhost:5000/hello/
 ```
 
-### Build the 'regular' container
-
-This command builds a container which will run a Uvicorn server and deploy the ASGI app on it : 
+The `/goodbye` route
 
 ```
-docker build -t hello-world-uvicorn . 
+curl http://localhost:5000/goodbye/
 ```
 
-### Run the container
 
-The command starts the container :
+## Build and deploy the image to ECR
 
-```
-docker run -p 5000:5000 hello-world-uvicorn:latest
-```
+Lambda containers must be hosted by the AWS Elastic Container Registry (ECR).
 
-You can make a test with this command :
+### Run the container locally
 
-```
-curl http://localhost:5000/hello/
-```
-
-### Build the container for AWS Lambda
-
-Now we can build the container for AWS Lambda which will use the Mangum handler. We use another Dockerfile which will use a base image provided by AWS :
+To build and run the container locally,
 
 ```
-docker build -t hello-world-lambda . -f Dockerfile.aws.lambda
-```
-
-### Run the AWS Lambda container for local test
-
-Let's start the container to test the lambda locally :
-
-```
-docker run -p 9000:8080 hello-world-lambda:latest
+make run_container  # also builds image
 ```
 
 ### Test the Lambda
 
-We send the input event that the lambda would receive from the API Gateway with the following command :
+We send the input event that the lambda would receive from the API Gateway with the following command:
 
 ```
-curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{
-    "resource": "/hello",
-    "path": "/hello/",
-    "httpMethod": "GET",
-    "headers": {
-      "Accept": "*/*",
-      "Accept-Encoding": "gzip, deflate",
-      "cache-control": "no-cache",
-      "CloudFront-Forwarded-Proto": "https",
-      "CloudFront-Is-Desktop-Viewer": "true",
-      "CloudFront-Is-Mobile-Viewer": "false",
-      "CloudFront-Is-SmartTV-Viewer": "false",
-      "CloudFront-Is-Tablet-Viewer": "false",
-      "CloudFront-Viewer-Country": "US",
-      "Content-Type": "application/json",
-      "headerName": "headerValue",
-      "Host": "gy415nuibc.execute-api.us-east-1.amazonaws.com",
-      "Postman-Token": "9f583ef0-ed83-4a38-aef3-eb9ce3f7a57f",
-      "User-Agent": "PostmanRuntime/2.4.5",
-      "Via": "1.1 d98420743a69852491bbdea73f7680bd.cloudfront.net (CloudFront)",
-      "X-Amz-Cf-Id": "pn-PWIJc6thYnZm5P0NMgOUglL1DYtl0gdeJky8tqsg8iS_sgsKD1A==",
-      "X-Forwarded-For": "54.240.196.186, 54.182.214.83",
-      "X-Forwarded-Port": "443",
-      "X-Forwarded-Proto": "https"
-    },
-    "multiValueHeaders":{
-      "Accept":[
-        "*/*"
-      ],
-      "Accept-Encoding":[
-        "gzip, deflate"
-      ],
-      "cache-control":[
-        "no-cache"
-      ],
-      "CloudFront-Forwarded-Proto":[
-        "https"
-      ],
-      "CloudFront-Is-Desktop-Viewer":[
-        "true"
-      ],
-      "CloudFront-Is-Mobile-Viewer":[
-        "false"
-      ],
-      "CloudFront-Is-SmartTV-Viewer":[
-        "false"
-      ],
-      "CloudFront-Is-Tablet-Viewer":[
-        "false"
-      ],
-      "CloudFront-Viewer-Country":[
-        "US"
-      ],
-      "":[
-        ""
-      ],
-      "Content-Type":[
-        "application/json"
-      ],
-      "headerName":[
-        "headerValue"
-      ],
-      "Host":[
-        "gy415nuibc.execute-api.us-east-1.amazonaws.com"
-      ],
-      "Postman-Token":[
-        "9f583ef0-ed83-4a38-aef3-eb9ce3f7a57f"
-      ],
-      "User-Agent":[
-        "PostmanRuntime/2.4.5"
-      ],
-      "Via":[
-        "1.1 d98420743a69852491bbdea73f7680bd.cloudfront.net (CloudFront)"
-      ],
-      "X-Amz-Cf-Id":[
-        "pn-PWIJc6thYnZm5P0NMgOUglL1DYtl0gdeJky8tqsg8iS_sgsKD1A=="
-      ],
-      "X-Forwarded-For":[
-        "54.240.196.186, 54.182.214.83"
-      ],
-      "X-Forwarded-Port":[
-        "443"
-      ],
-      "X-Forwarded-Proto":[
-        "https"
-      ]
-    },
-    "queryStringParameters": {
-    },
-    "multiValueQueryStringParameters":{
-    },
-    "pathParameters": {
-    },
-    "stageVariables": {
-      "stageVariableName": "stageVariableValue"
-    },
-    "requestContext": {
-      "accountId": "12345678912",
-      "resourceId": "roq9wj",
-      "stage": "testStage",
-      "requestId": "deef4878-7910-11e6-8f14-25afc3e9ae33",
-      "identity": {
-        "cognitoIdentityPoolId": null,
-        "accountId": null,
-        "cognitoIdentityId": null,
-        "caller": null,
-        "apiKey": null,
-        "sourceIp": "192.168.196.186",
-        "cognitoAuthenticationType": null,
-        "cognitoAuthenticationProvider": null,
-        "userArn": null,
-        "userAgent": "PostmanRuntime/2.4.5",
-        "user": null
-      },
-      "resourcePath": "/hello/",
+curl -POST "http://localhost:9000/2015-03-31/functions/function/invocations" \
+-d '{
+      "resource": "/hello",
+      "path": "/hello/",
       "httpMethod": "GET",
-      "apiId": "gy415nuibc"
-    },
-    "body": "{}",
-    "isBase64Encoded": false
+      "multiValueQueryStringParameters": {},
+      "requestContext": {}
 }'
 ```
 
-See the server logs :
-```
-(fastapi-lambda-container) gbdevw@gbdevw-dev:~/python-fastapi-aws-lambda-container$ docker run -p 9000:8080 hello-world:latest
-time="2020-12-28T15:31:13.892" level=info msg="exec '/var/runtime/bootstrap' (cwd=/var/task, handler=)"
-time="2020-12-28T15:31:18.345" level=info msg="extensionsDisabledByLayer(/opt/disable-extensions-jwigqn8j) -> stat /opt/disable-extensions-jwigqn8j: no such file or directory"
-time="2020-12-28T15:31:18.345" level=warning msg="Cannot list external agents" error="open /opt/extensions: no such file or directory"
-START RequestId: b7cd3c8d-6c70-4194-b5bd-6a0b8e766b1f Version: $LATEST
-{"timestamp": "2020-12-28T15:31:18.650259", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "internal", "message": "Waiting for application startup."}
-{"timestamp": "2020-12-28T15:31:18.650726", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "internal", "message": "LifespanCycleState.STARTUP:  'lifespan.startup.complete' event received from application."}
-{"timestamp": "2020-12-28T15:31:18.650863", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "internal", "message": "Application startup complete."}
-{"timestamp": "2020-12-28T15:31:18.651481", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "api-request", "message": "Request", "uuid": "bd8ec07d-2b70-436d-8157-1d802be13240", "method": "GET", "url": "https://gy415nuibc.execute-api.us-east-1.amazonaws.com/hello/"}
-{"timestamp": "2020-12-28T15:31:18.652105", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "api-response", "message": "Response sent", "uuid": "bd8ec07d-2b70-436d-8157-1d802be13240", "code": 200}
-{"timestamp": "2020-12-28T15:31:18.652506", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "internal", "message": "HTTPCycleState.REQUEST:  'http.response.start' event received from application."}
-{"timestamp": "2020-12-28T15:31:18.652641", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "internal", "message": "HTTPCycleState.RESPONSE:  'http.response.body' event received from application."}
-{"timestamp": "2020-12-28T15:31:18.652750", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "internal", "message": "HTTPCycleState.RESPONSE:  'http.response.body' event received from application."}
-{"timestamp": "2020-12-28T15:31:18.652996", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "internal", "message": "HTTPCycleState.RESPONSE:  'http.response.body' event received from application."}
-{"timestamp": "2020-12-28T15:31:18.653305", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "internal", "message": "Waiting for application shutdown."}
-{"timestamp": "2020-12-28T15:31:18.653449", "level": "INFO", "service": "Helloworld", "instance": "84cc35a9-965e-4ac9-9f45-6554341c0dc2", "type": "internal", "message": "LifespanCycleState.SHUTDOWN:  'lifespan.shutdown.complete' event received from application."}
-END RequestId: b7cd3c8d-6c70-4194-b5bd-6a0b8e766b1f
-REPORT RequestId: b7cd3c8d-6c70-4194-b5bd-6a0b8e766b1f  Init Duration: 0.42 ms  Duration: 308.38 ms     Billed Duration: 400 ms Memory Size: 3008 MB    Max Memory Used: 3008 MB
-```
+### Deploy to ECR
 
-And the lambda output :
+1. Create repository for the container using `make create_ecr_repository`
+2. Push the image using `make deploy_to_ecr` (this also builds the image)
+
+## Create Lambda function
+
+1. Follow [these instructions](https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html#permissions-executionrole-console) to create a `lambda-role` in the IAM console.
+2. Set the `AWS_LAMBDA_ROLE_ARN` environment variable to the value of the "Role ARN" field in the Role Summary page.
+3. Run `make create_lambda_function` to create the container-defined function.
+
+## Add the API Gateway REST endpoint
+
+These instructions are for the console, but this process could likely be automated.
+
+### Create the API Gateway endpoint
+
+First, add the trigger
+
+1. Visit `https://<AWS_REGION>.console.aws.amazon.com/lambda/home` and select your newly created function
+2. Select "Add trigger," then "API Gateway"
+3. Select "Create an API"
+4. For the API Type, choose REST API
+5. For security, choose "IAM"
+6. Click Add to create the endpoint
+
+If you didn't change the name, you should now have a trigger called `hello-lambda-API`.
+
+The trigger should now appear in the Lambda page. Click the `Details` drop down to see the full API endpoint and add the full URL (including https) to your `.env` as `API_SECURE_ENDPOINT`.
+
+### Add the `POST` method to your endpoint
+
+The process above creates a secure `ANY` method. To access the Lambda you need to add a (secure) `POST` method to the endpoint. (This redundancty could prbably be avoided with programatic creation of the endpoint.)
+
+1. Click the "API Gateway" link, called `hello-lambda-API` if you didn't change the default name when creating, and you will be taken to the API Gateway console for your API
+2. In the Resources tab, select your endpoint and then in the Actions drop down select "Create Method"
+3. Choose `POST` in the dropdown and seleect the check box to confirm
+4. Leave Integration Type as "Lambda", make sure the region is correct, and choose your Lambda by typing its name into the Lambda Function field
+4. Confirm the permission change
+
+To secure the endpoint, click on the Method Request box in the flow diagram of your `POST` method. Then
+
+1. Click the pencil icon in Authorization anbd select AWS IAM
+2. Click the checkbox to confirm
+
+Now, any role with the `AmazonAPIGatewayInvokeFullAccess` attached can access the endpoint using their `AWS_ACCESS_KEY` and `AWS_SECRET_ACCESS_KEY` to generate an authorized signature to be included in the request!
+
+If you need to create such a role, follow the steps in the "Create the authorized invocation role" section.
+
+If you would like to test the endpoint in the console, without the need for authorization, you can click the "test" box in the digram and copy/paste the following `JSON` into the request body
 
 ```json
-{"isBase64Encoded": false, "statusCode": 200, "headers": {"content-length": "25", "content-type": "application/json", "x-correlation-id": "e6ccda71-c841-40de-8208-aff40a2b155b"}, "body": "{\"message\":\"Hello World\"}"}
+{
+      "resource": "/hello",  # or /goodbye
+      "path": "/hello/",  # or /goodbye/
+      "httpMethod": "GET",
+      "multiValueQueryStringParameters": {},
+      "requestContext": {}
+}
 ```
 
-### Deploy the lambda to ECR
+You should see a response body like
 
-Runing `make deploy_to_ecr` will build the image and tag with `:latest` then push to ECR. This does not publish the updated lambda, which you can do [in the console](https://us-west-1.console.aws.amazon.com/lambda/home?region=us-west-1#/functions/hello-lambda/edit/image-settings?tab=image) (it is [unclear](https://docs.aws.amazon.com/cli/latest/reference/lambda/update-function-code.html) if the this is possible in the CLI).
+```json
+{
+  "isBase64Encoded": false,
+  "statusCode": 200,
+  "headers": {
+    "content-length": "26",
+    "content-type": "application/json",
+    "x-correlation-id": "e9179dd6-9d7f-479c-af36-71f63378ad98"
+  },
+  "body": "{\"message\":\"Hello, World\"}"
+}
+```
+
+### Deploy your endpoint
+
+Once your secure endpoint is ready to deploy, from the API Gateway console, select your `POST` method and under the Actions dropdown, choose "Deploy API"
+
+1. You will be ased to select a stage of deployment. The default stage is `default`, but you could have multiple stages, e.g., demo, staging, production, etc.
+2. Enter a description for your deployment then click the "Deploy" button.
+3. You will be taken to the Stages panel, where you can manage the stage, and see Deployment History.
+
+That's it! You're live! See below to run the example code.
+
+### Create the authorized invocation role
+
+If you have secured the endpoint as described above, and you do not have credentials for an IAM role with a `AmazonAPIGatewayInvokeFullAccess` policy attached, you need to create such a role.
+
+1. First, create an IAM role authorized to invoke the API Gateway by following [these instructions](https://www.youtube.com/watch?v=KXyATZctkmQ) (The role needs only the `AmazonAPIGatewayInvokeFullAccess` attached)
+2. Download the programmatic access credentials for this role-- `AWS_ACCESS_KEY` and `AWS_SECRET_ACCESS_KEY`--, and add them to your `.env` file in the project root, as you will need the credentials to run the deployed example
+
+## Run the example
+
+If you have completed all of the steps above, congrats! Your secure, containerized, serverless endpoint is live!
+
+To test invoking your endpoint from within a python process, we have included a simple example call using the [Requests](https://docs.python-requests.org/en/master/) library along with [requests_aws4auth](https://github.com/tedder/requests-aws4auth) for generating authorized signatures.
+
+The example calls each route (`/hello` and `/goodbye`) twice. Once with an authorized signature and once without. The response status code is `assert`ed to be `200` in the authorized call, and `403` in the unauthorized call. If you see an assertion errror, it probably means you have skipped one of the above steps or improperly configured your credentials.
+
+### Prerequisites
+The example requires the following environment varaiables (easiest to put in a `.env`)
+
+```
+# role must have AmazonAPIGatewayInvokeFullAccess policy attached
+AWS_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY
+AWS_REGION
+
+# from the details dropdown of the triggers panael in the Lambda console
+API_SECURE_ENDPOINT
+
+```
+
+### Running the example
+To run the example, from a terminal running your `hello-lambda` environment with all requirements install, execute
+
+```bash
+(hello-lambda)
+$ python examples/invoke_secure_routes.py
+```
+
+You should see the following logged output
+
+```bash
+2021-09-12 13:37:52.386 | INFO     | __main__:<module>:23 - 
+Invoking route: hello
+
+2021-09-12 13:37:52.386 | INFO     | __main__:<module>:32 - Authorized request: hello
+2021-09-12 13:37:53.587 | INFO     | __main__:<module>:35 - {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '26', 'content-type': 'application/json', 'x-correlation-id': '9a972d54-fd2f-454b-a7a7-9e8534dbb133'}, 'body': '{"message":"Hello, World"}'}
+2021-09-12 13:37:53.587 | INFO     | __main__:<module>:38 - Unauthorized request: hello
+2021-09-12 13:37:53.664 | INFO     | __main__:<module>:41 - {'message': 'Missing Authentication Token'}
+2021-09-12 13:37:53.664 | INFO     | __main__:<module>:23 - 
+Invoking route: goodbye
+
+2021-09-12 13:37:53.664 | INFO     | __main__:<module>:32 - Authorized request: goodbye
+2021-09-12 13:37:53.767 | INFO     | __main__:<module>:35 - {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '28', 'content-type': 'application/json', 'x-correlation-id': '71866237-1bfd-4fb1-98c5-7119a675b01d'}, 'body': '{"message":"Goodbye, World"}'}
+2021-09-12 13:37:53.767 | INFO     | __main__:<module>:38 - Unauthorized request: goodbye
+2021-09-12 13:37:53.857 | INFO     | __main__:<module>:41 - {'message': 'Missing Authentication Token'}
+```
+
+Success!
