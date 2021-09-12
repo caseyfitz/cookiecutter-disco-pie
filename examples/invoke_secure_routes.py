@@ -1,14 +1,14 @@
 import os
 import requests
 
-from dotenv import find_dotenv, load_dotenv
+from dotenv import load_dotenv
 from loguru import logger
 from requests_aws4auth import AWS4Auth
 
 
-load_dotenv(find_dotenv())
+load_dotenv()
 
-# Get credentials for IAM role exactly 1 poicy attached: AmazonAPIGatewayInvokeFullAccess
+# Get credentials for IAM role exactly 1 policy attached: AmazonAPIGatewayInvokeFullAccess
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_REGION = os.getenv("AWS_REGION")
