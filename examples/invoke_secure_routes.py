@@ -21,6 +21,7 @@ auth = AWS4Auth(AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION, "execute-api"
 # Invoke each route of the endpoint using the authorization
 for route in ["hello", "goodbye"]:
     logger.info(f"\nInvoking route: {route}\n")
+    # NOTE: Each JSON field below is required by the Magnum app: https://mangum.io
     json = {
         "resource": f"/{route}",
         "path": f"/{route}/",
