@@ -3,3 +3,7 @@
 awscli
 black
 flake8
+loguru
+python-dotenv
+requests
+requests_aws4auth
