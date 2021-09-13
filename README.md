@@ -1,6 +1,6 @@
 # Deploying a containerized, serverless, and secure REST API
 
-This repository walks through the end-to-end deployment of a secure, serverless, containerized REST API endpoint. Bulding on the excellent [original content](https://github.com/gbdevw/python-fastapi-aws-lambda-container), this example explains in detail the entire process of deploying your containerized [ASGI](https://asgi.readthedocs.io/en/latest/) application such that authorized users, e.g., a web application with appropriate credentials, are able to securely access the endpoints.
+This repository walks through the end-to-end deployment of a secure, serverless, containerized REST API endpoint. Bulding on the excellent [original content](https://github.com/gbdevw/python-fastapi-aws-lambda-container), this example explains in detail the entire process of deploying your containerized [ASGI](https://asgi.readthedocs.io/en/latest/) application such that authorized users, e.g., a web application with appropriate credentials, are able to securely access the endpoint.
 
 [FastAPI](https://fastapi.tiangolo.com) and [Magnum](https://mangum.io) are used implement a [containerized](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html), serverless [ASGI](https://asgi.readthedocs.io/en/latest/) application via [AWS Lambda](https://aws.amazon.com/lambda/). A secure endpoint for this application is created using [AWS API Gateway](https://aws.amazon.com/api-gateway/). Authorization is managed using [AWS Identity and Access Management](https://aws.amazon.com/iam/).
 
@@ -44,7 +44,6 @@ See below for more details.
 
 3. [Anaconda](https://www.anaconda.com/products/individual-d), for managing the development requirements
 4. To run all `make` functions, you'll need a `.env` in the repository root directory containing
-5. To run the example in `examples/`, you will need to add some additional variables to the `.env` which will be generated as you follow the steps below
 
 ```
 # Asume .env contains
@@ -52,6 +51,8 @@ See below for more details.
 # AWS_REGION
 # AWS_LAMBDA_ROLE_ARN (see "Create Lambda function" section below)
 ```
+
+5. To run the example in `examples/`, you will need to add some additional variables to the `.env` which will be generated as you follow the steps below
 
 ## Install dependencies
 
@@ -63,7 +64,7 @@ For local development,
 
 ## Run the app locally
 
-Deploy on uvicorn:
+Deploy on [uvicorn](https://www.uvicorn.org):
 
 ```
 uvicorn app.app:app --reload --host 0.0.0.0 --port 5000
@@ -82,7 +83,6 @@ The `/goodbye` route
 ```
 curl http://localhost:5000/goodbye/
 ```
-
 
 ## Build and deploy the image to ECR
 
@@ -119,7 +119,7 @@ curl -POST "http://localhost:9000/2015-03-31/functions/function/invocations" \
 ## Create Lambda function
 
 1. Follow [these instructions](https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html#permissions-executionrole-console) to create a `lambda-role` in the IAM console.
-2. Set the `AWS_LAMBDA_ROLE_ARN` environment variable to the value of the "Role ARN" field in the Role Summary page.
+2. Add the `AWS_LAMBDA_ROLE_ARN` environment variable to your `.env` using the value of the "Role ARN" field in the Role Summary page.
 3. Run `make create_lambda_function` to create the container-defined function.
 
 ## Add the API Gateway REST endpoint
@@ -133,7 +133,7 @@ First, add the trigger
 1. Visit `https://<AWS_REGION>.console.aws.amazon.com/lambda/home` and select your newly created function
 2. Select "Add trigger," then "API Gateway"
 3. Select "Create an API"
-4. For the API Type, choose REST API
+4. For the API Type, choose "REST API"
 5. For security, choose "IAM"
 6. Click Add to create the endpoint
 
