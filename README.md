@@ -4,7 +4,7 @@ This repository walks through the end-to-end deployment of a secure, serverless,
 
 [FastAPI](https://fastapi.tiangolo.com) and [Magnum](https://mangum.io) are used implement a [containerized](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html), serverless [ASGI](https://asgi.readthedocs.io/en/latest/) application via [AWS Lambda](https://aws.amazon.com/lambda/). A secure endpoint for this application is created using [AWS API Gateway](https://aws.amazon.com/api-gateway/). Authorization is managed using [AWS Identity and Access Management](https://aws.amazon.com/iam/).
 
-This architecture enables serving many routes using 1 Lambda, with minimal time spent in the AWS console. The containerized approach means you can't use [Chalice](https://github.com/aws/chalice) for deployment, at least for now. However, as the original contributor of this example [notes](https://medium.com/analytics-vidhya/python-fastapi-and-aws-lambda-container-3e524c586f01),
+This architecture enables serving many routes using 1 Lambda, with minimal time spent in the AWS console. The containerized approach means you can't use [Chalice](https://github.com/aws/chalice) for deployment, at least for now. However, as the [original contributor](https://github.com/gbdevw/python-fastapi-aws-lambda-container) of this example [notes](https://medium.com/analytics-vidhya/python-fastapi-and-aws-lambda-container-3e524c586f01),
 
 >The container support is very useful to deploy applications that could not pass Lambda restrictions or that use an unsupported runtime. It is especially useful for Python applications which embed Deep Learning or Machine Learning models because the librairies and models are usually too heavy to be deployed on AWS Lambda, even when using Lambda layers.
 
