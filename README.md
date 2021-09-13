@@ -1,14 +1,27 @@
 # Deploying a containerized, serverless, and secure REST API
 
-This repository walks through the end-to-end deployment of a secure, serverless, containerized REST API endpoint. Bulding on the excellent [original content](https://github.com/gbdevw/python-fastapi-aws-lambda-container), this example explains in detail the entire process of deploying your containerized [ASGI](https://asgi.readthedocs.io/en/latest/) application such that authorized users, e.g., a web application with appropriate credentials, are able to securely access the endpoint.
+This repository demonstrates the end-to-end AWS deployment of a secure, serverless, **containerized** REST API endpoint. Bulding on the excellent [original content](https://github.com/gbdevw/python-fastapi-aws-lambda-container), we provide code to automate the AWS deployment of your containerized [ASGI](https://asgi.readthedocs.io/en/latest/) application.
 
-[FastAPI](https://fastapi.tiangolo.com) and [Magnum](https://mangum.io) are used implement a [containerized](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html), serverless [ASGI](https://asgi.readthedocs.io/en/latest/) application via [AWS Lambda](https://aws.amazon.com/lambda/). A secure endpoint for this application is created using [AWS API Gateway](https://aws.amazon.com/api-gateway/). Authorization is managed using [AWS Identity and Access Management](https://aws.amazon.com/iam/).
+[FastAPI](https://fastapi.tiangolo.com) and [Magnum](https://mangum.io) are used implement a [containerized](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html), [ASGI](https://asgi.readthedocs.io/en/latest/) application on the [AWS Lambda](https://aws.amazon.com/lambda/) serverless architecture. A secure endpoint for this application is created using [AWS API Gateway](https://aws.amazon.com/api-gateway/). Authorization is managed using [AWS Identity and Access Management](https://aws.amazon.com/iam/).
 
-This architecture enables serving many routes using 1 Lambda, with minimal time spent in the AWS console. The containerized approach means you can't use [Chalice](https://github.com/aws/chalice) for deployment, at least for now. However, as the [original contributor](https://github.com/gbdevw/python-fastapi-aws-lambda-container) of this example [notes](https://medium.com/analytics-vidhya/python-fastapi-and-aws-lambda-container-3e524c586f01),
+### Why not just use Chalice?
+
+ The standard Lambda deployment package, [Chalice](https://github.com/aws/chalice), does not support the deployment of containerized Lambdas, at least for now. However, as the [original contributor](https://github.com/gbdevw/python-fastapi-aws-lambda-container) of this example [notes](https://medium.com/analytics-vidhya/python-fastapi-and-aws-lambda-container-3e524c586f01), there advantages to containerized Lambdas, especially in machine learning use-cases
 
 >The container support is very useful to deploy applications that could not pass Lambda restrictions or that use an unsupported runtime. It is especially useful for Python applications which embed Deep Learning or Machine Learning models because the librairies and models are usually too heavy to be deployed on AWS Lambda, even when using Lambda layers.
 
-Most steps that do not require the AWS console can be automated using the included `Makefile`
+### What is Magnum?
+
+Magnum provides an adapter for using ASGI applications, such as FastAPI, with AWS Lambda & API Gateway. Magnum facilitates a loose coupling between the ASGI application and AWS. One simply wraps their `app` as a Magnum handler
+
+```python
+handler = Magnum(app)
+```
+
+and points to the `app.app.handler` as the default executable (`CMD`) of the application image.
+
+### Why use FastAPI?
+In principle, the loose coupling between the ASGI application (FastAPI) and the cloud adapter (Magnum) facilitates the explosure of multiple "serverless cloud backends" to a single ASGI application. Ideally, one would need only change the default executable in the associated `Dockerfile`, provided there are Magnum-like ASGI adapters available for the given cloud provider (a big "if"). An ASGI application written in Chalice, on the othr hand, would need to be rewritten in the cloud provider's Chalice-like framework.
 
 ## hello-lambda overview
 
