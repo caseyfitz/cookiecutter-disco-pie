@@ -11,6 +11,7 @@ ECR_URI = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 IMAGE_URI = $(ECR_URI)/$(LAMBDA_AND_CONTAINER_NAME)
 AWS_DOCKERFILE_NAME = Dockerfile
 
+
 create_environment:
 	conda create --yes --name $(LAMBDA_AND_CONTAINER_NAME) python=3.8
 
@@ -40,6 +41,9 @@ create_lambda_function:
 	--package-type Image \
 	--code ImageUri=$(IMAGE_URI):latest \
 	--role $(AWS_LAMBDA_ROLE_ARN)
+
+deploy_api:
+	bash deployment/api.sh $(LAMBDA_AND_CONTAINER_NAME)
 
 lint:
 	black app
