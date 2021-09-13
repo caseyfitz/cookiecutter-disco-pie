@@ -31,11 +31,11 @@ for route in ["hello", "goodbye"]:
     }
     logger.info(f"Authorized request: {route}")
     response = requests.post(API_SECURE_ENDPOINT, auth=auth, json=json)
-    assert response.status_code == 200
-    logger.info((response.json()))
+    msg_prefix = "Failed" if not (response.status_code == 200) else "Succeeded"
+    logger.info(f"{msg_prefix}: {response.json()}")
 
     # Confirm that unauthorized requests are deined by removing auth
     logger.info(f"Unauthorized request: {route}")
     response = requests.post(API_SECURE_ENDPOINT, json=json)
-    assert response.status_code == 403
-    logger.info((response.json()))
+    msg_prefix = "Failed" if not (response.status_code == 403) else "Succeeded"
+    logger.info(f"{msg_prefix}: {response.json()}")
