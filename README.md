@@ -1,6 +1,6 @@
 # Deploying a containerized, serverless, and secure REST API
 
-This repository demonstrates the end-to-end AWS deployment of a secure, serverless, **containerized** REST API endpoint. Bulding on the excellent [original content](https://github.com/gbdevw/python-fastapi-aws-lambda-container), we provide code to automate the AWS deployment of your containerized [ASGI](https://asgi.readthedocs.io/en/latest/) application.
+This repository demonstrates the end-to-end AWS deployment of a secure, serverless, **containerized** REST API endpoint. Bulding on the excellent [original content](https://github.com/gbdevw/python-fastapi-aws-lambda-container), we provide code to automate the AWS deployment of your containerized [ASGI](https://asgi.readthedocs.io/en/latest/) application. Eventually, we plan for this process to be further automated using [Typer](https://typer.tiangolo.com), templatized using [Cookiecutter](https://cookiecutter.readthedocs.io/en/1.7.3/#), and potentially abstracted to support additional cloud providers.
 
 [FastAPI](https://fastapi.tiangolo.com) and [Magnum](https://mangum.io) are used implement a [containerized](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html), [ASGI](https://asgi.readthedocs.io/en/latest/) application on the [AWS Lambda](https://aws.amazon.com/lambda/) serverless architecture. A secure endpoint for this application is created using [AWS API Gateway](https://aws.amazon.com/api-gateway/). Authorization is managed using [AWS Identity and Access Management](https://aws.amazon.com/iam/).
 
