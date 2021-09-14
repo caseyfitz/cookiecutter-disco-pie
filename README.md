@@ -25,7 +25,65 @@ In principle, the loose coupling between the ASGI application (FastAPI) and the 
 
 ## hello-lambda overview
 
-The application, container name, lambda functions, etc., are referred to as `hello-lambda` throuhgout.
+The application, container name, lambda function, and API endpoint are referred to as `hello-lambda` throuhgout. The name can be controlled by setting the `LAMBDA_AND_CONTAINER_NAME` variable in the `Makefile`.
+
+### Very quick start – auto_deploy
+The automatic deployment program uses the [AWS CLI](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/index.html) to
+
+1. Build a container image for the application
+2. Push the image to the Elastic Container Repository
+3. Create an IAM role with Lambda invokation policies attached
+4. Create a Lambda function using the lambda policy
+5. Create a REST API through API Gateway that requires `AmazonAPIGatewayInvokeFullAccess` to call
+6. Deploy the API and add its endpoint to your `.env`
+
+You will need an `~/.aws/credentials` file with a `[default]` profile that has permission to interact with all of the above services.
+
+Assuming you have a `.env` file containing AWS credentials with the `AmazonAPIGatewayInvokeFullAccess` attached, you can perform all of the above steps by running
+
+```bash
+make auto_deploy
+```
+
+from an appropriate environemnt (see Prerequisites).
+
+This command will also run the `example.py` script to confirm the deployed API is accessible and requires the expected authentication.
+
+Note that your `.env` should contain
+
+```
+AWS_ACCOUNT_ID=123456789
+AWS_REGION=some-valid-aws-region
+AWS_ACCESS_KEY=AKBCDEFGHIJKL
+AWS_SECRET_ACCESS_KEY=qwertyuiopasdfghjklzxcvbnm
+
+```
+
+The `AmazonAPIGatewayInvokeFullAccess`-enabled credentials need not be the same as your `~/.aws/credentials` profile, but they **must be stored separately, in the `.env`, for the `example.py` script to succeed**.
+
+You will know the example succeeded because the logs will show (API id masked)
+
+```bash
+2021-09-14 07:58:53.643 | INFO     | __main__:<module>:18 - Attempting to call: https://**********.execute-api.us-west-1.amazonaws.com/test/hello-lambda
+2021-09-14 07:58:53.643 | INFO     | __main__:<module>:25 - 
+Invoking route: hello
+
+2021-09-14 07:58:53.643 | INFO     | __main__:<module>:34 - Authorized request: hello
+2021-09-14 07:58:54.734 | INFO     | __main__:<module>:37 - Succeeded: {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '26', 'content-type': 'application/json', 'x-correlation-id': 'b7206315-032b-4151-ad0f-68db7241f73a'}, 'body': '{"message":"Hello, World"}'}
+2021-09-14 07:58:54.734 | INFO     | __main__:<module>:40 - Unauthorized request: hello
+2021-09-14 07:58:54.855 | INFO     | __main__:<module>:43 - Succeeded: {'message': 'Missing Authentication Token'}
+2021-09-14 07:58:54.855 | INFO     | __main__:<module>:25 - 
+Invoking route: goodbye
+
+2021-09-14 07:58:54.856 | INFO     | __main__:<module>:34 - Authorized request: goodbye
+2021-09-14 07:58:54.986 | INFO     | __main__:<module>:37 - Succeeded: {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '28', 'content-type': 'application/json', 'x-correlation-id': '37b94c1e-1f59-4623-a2d0-908368c4a045'}, 'body': '{"message":"Goodbye, World"}'}
+2021-09-14 07:58:54.986 | INFO     | __main__:<module>:40 - Unauthorized request: goodbye
+2021-09-14 07:58:55.085 | INFO     | __main__:<module>:43 - Succeeded: {'message': 'Missing Authentication Token'}
+```
+
+### Slow start – console
+
+The rest of the readme aplains how to deploy the API using the AWS console.
 
 There are two routes
 1. A `GET` request to `/hello` returns "Hello, World"
@@ -79,7 +137,7 @@ For local development,
 
 Deploy on [uvicorn](https://www.uvicorn.org):
 
-```
+```bash
 uvicorn app.app:app --reload --host 0.0.0.0 --port 5000
 ```
 
@@ -87,13 +145,13 @@ You can test the application by using the following command:
 
 The `/hello` route
 
-```
+```bash
 curl http://localhost:5000/hello/
 ```
 
 The `/goodbye` route
 
-```
+```bash
 curl http://localhost:5000/goodbye/
 ```
 
@@ -105,7 +163,7 @@ Lambda containers must be hosted by the AWS Elastic Container Registry (ECR).
 
 To build and run the container locally,
 
-```
+```bash
 make run_container  # also builds image
 ```
 
@@ -113,7 +171,7 @@ make run_container  # also builds image
 
 We send the input event that the lambda would receive from the API Gateway with the following command:
 
-```
+```bash
 curl -POST "http://localhost:9000/2015-03-31/functions/function/invocations" \
 -d '{
       "resource": "/hello",
