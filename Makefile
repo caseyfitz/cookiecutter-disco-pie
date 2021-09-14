@@ -6,8 +6,8 @@ include .env
 
 .PHONY: requirements
 
-LAMBDA_AND_CONTAINER_NAME = hello-lambda-auto
-LAMBDA_ROLE_NAME = lambda-role-auto
+LAMBDA_AND_CONTAINER_NAME = hello-lambda
+LAMBDA_ROLE_NAME = lambda-role
 
 ECR_URI = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 IMAGE_URI = $(ECR_URI)/$(LAMBDA_AND_CONTAINER_NAME)
@@ -63,8 +63,10 @@ create_lambda_function:
 	--role $(shell aws iam get-role --role-name $(LAMBDA_ROLE_NAME) --output json | jq -r '.Role.Arn')
 
 deploy_api:
+	$(shell sleep 20)
 	bash deploy_api.sh \
 	$(LAMBDA_AND_CONTAINER_NAME) \
 	$(shell aws iam get-role --role-name $(LAMBDA_ROLE_NAME) --output json | jq -r '.Role.Arn')
 
+# Do everything
 auto_deploy: create_ecr_repository deploy_to_ecr create_lambda_role create_lambda_function deploy_api

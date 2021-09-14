@@ -4,7 +4,7 @@ source .env
 LAMBDA_NAME=$1
 AUTHORIZATION_TYPE=AWS_IAM
 HTTP_METHOD=POST
-STAGE_NAME=default
+STAGE_NAME=test
 STATEMENT_ID=123456  # must be unique
 LAMBDA_ARN=arn:aws:lambda:$AWS_REGION:$AWS_ACCOUNT_ID:function:$LAMBDA_NAME
 LAMBDA_INTEGRATION_ARN=arn:aws:apigateway:$AWS_REGION:lambda:path/2015-03-31/functions/$LAMBDA_ARN/invocations
@@ -94,12 +94,12 @@ aws apigateway create-deployment \
     --rest-api-id $rest_api_id \
     --region $AWS_REGION \
     --stage-name $STAGE_NAME \
-    --stage-description 'Test stage' \
+    --stage-description 'This is a stage' \
     --description 'First deployment'
 
 # Test
 echo API_SECURE_ENDPOINT=https://$rest_api_id.execute-api.$AWS_REGION.amazonaws.com/$STAGE_NAME/$LAMBDA_NAME >> .env
-python examples/invoke_secure_routes.py
+python example.py
 
-echo Deployed
-echo $(https://$rest_api_id.execute-api.$AWS_REGION.amazonaws.com/$STAGE_NAME/$LAMBDA_NAME)
+echo Deployed REST API can be accessed at
+echo https://$rest_api_id.execute-api.$AWS_REGION.amazonaws.com/$STAGE_NAME/$LAMBDA_NAME
