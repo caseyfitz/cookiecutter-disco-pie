@@ -18,7 +18,7 @@ API_SECURE_ENDPOINT = os.getenv("API_SECURE_ENDPOINT")
 logger.info(f"Attempting to call: {API_SECURE_ENDPOINT}")
 
 # Create the AWS V4 authorization signature needed by the request
-auth = AWS4Auth(AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION, "execute-api")
+auth = AWS4Auth(AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_SERVICE)
 
 # Invoke each route of the endpoint using the authorization
 for route in ["hello", "goodbye"]:
