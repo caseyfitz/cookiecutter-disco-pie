@@ -1,12 +1,14 @@
 # Asume .env contains
 # AWS_ACCOUNT_ID
 # AWS_REGION
-# AWS_LAMBDA_ROLE_ARN
+# AWS_PROFILE
 include .env
 
 .PHONY: requirements
 
-LAMBDA_AND_CONTAINER_NAME = hello-lambda
+LAMBDA_AND_CONTAINER_NAME = hello-lambda-auto
+LAMBDA_ROLE_NAME = lambda-role-auto
+
 ECR_URI = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 IMAGE_URI = $(ECR_URI)/$(LAMBDA_AND_CONTAINER_NAME)
 AWS_DOCKERFILE_NAME = Dockerfile
@@ -17,6 +19,10 @@ create_environment:
 
 requirements:
 	pip install -r requirements-dev.txt
+
+lint:
+	black app
+	flake8 app
 
 build_image:
 	docker build -t $(LAMBDA_AND_CONTAINER_NAME) . --file $(AWS_DOCKERFILE_NAME)
@@ -34,17 +40,31 @@ deploy_to_ecr: build_image authenticate_ecr
 	docker tag  $(LAMBDA_AND_CONTAINER_NAME):latest $(IMAGE_URI):latest
 	docker push $(IMAGE_URI):latest
 
+create_lambda_role:
+	aws iam create-role \
+	--role-name $(LAMBDA_ROLE_NAME) \
+	--assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}'
+	
+	aws iam attach-role-policy \
+	--role-name $(LAMBDA_ROLE_NAME) \
+	--policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+	aws iam attach-role-policy \
+	--role-name $(LAMBDA_ROLE_NAME) \
+	--policy-arn arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+
 create_lambda_function:
+	$(shell sleep 20)
 	aws lambda create-function \
 	--function-name $(LAMBDA_AND_CONTAINER_NAME) \
 	--region $(AWS_REGION) \
 	--package-type Image \
 	--code ImageUri=$(IMAGE_URI):latest \
-	--role $(AWS_LAMBDA_ROLE_ARN)
+	--role $(shell aws iam get-role --role-name $(LAMBDA_ROLE_NAME) --output json | jq -r '.Role.Arn')
 
 deploy_api:
-	bash deployment/api.sh $(LAMBDA_AND_CONTAINER_NAME)
+	bash deploy_api.sh \
+	$(LAMBDA_AND_CONTAINER_NAME) \
+	$(shell aws iam get-role --role-name $(LAMBDA_ROLE_NAME) --output json | jq -r '.Role.Arn')
 
-lint:
-	black app
-	flake8 app
+auto_deploy: create_ecr_repository deploy_to_ecr create_lambda_role create_lambda_function deploy_api

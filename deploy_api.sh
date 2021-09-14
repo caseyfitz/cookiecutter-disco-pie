@@ -100,3 +100,6 @@ aws apigateway create-deployment \
 # Test
 echo API_SECURE_ENDPOINT=https://$rest_api_id.execute-api.$AWS_REGION.amazonaws.com/$STAGE_NAME/$LAMBDA_NAME >> .env
 python examples/invoke_secure_routes.py
+
+echo Deployed
+echo $(https://$rest_api_id.execute-api.$AWS_REGION.amazonaws.com/$STAGE_NAME/$LAMBDA_NAME)
