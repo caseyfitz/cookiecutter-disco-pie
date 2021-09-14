@@ -15,8 +15,10 @@ AWS_REGION = os.getenv("AWS_REGION")
 AWS_SERVICE = "execute-api"
 API_SECURE_ENDPOINT = os.getenv("API_SECURE_ENDPOINT")
 
+logger.info(f"Attempting to call: {API_SECURE_ENDPOINT}")
+
 # Create the AWS V4 authorization signature needed by the request
-auth = AWS4Auth(AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION, "execute-api")
+auth = AWS4Auth(AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_SERVICE)
 
 # Invoke each route of the endpoint using the authorization
 for route in ["hello", "goodbye"]:
@@ -31,11 +33,11 @@ for route in ["hello", "goodbye"]:
     }
     logger.info(f"Authorized request: {route}")
     response = requests.post(API_SECURE_ENDPOINT, auth=auth, json=json)
-    assert response.status_code == 200
-    logger.info((response.json()))
+    msg_prefix = "Failed" if not (response.status_code == 200) else "Succeeded"
+    logger.info(f"{msg_prefix}: {response.json()}")
 
     # Confirm that unauthorized requests are deined by removing auth
     logger.info(f"Unauthorized request: {route}")
     response = requests.post(API_SECURE_ENDPOINT, json=json)
-    assert response.status_code == 403
-    logger.info((response.json()))
+    msg_prefix = "Failed" if not (response.status_code == 403) else "Succeeded"
+    logger.info(f"{msg_prefix}: {response.json()}")
