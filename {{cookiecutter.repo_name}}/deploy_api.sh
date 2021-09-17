@@ -21,7 +21,7 @@ rest_api_id=$(
     --name $LAMBDA_NAME \
     --endpoint-configuration types="REGIONAL" \
     --region $AWS_REGION \
-    --description "Created by a program" \
+    --description "Created by DiscoPie" \
     --output json \
     | jq -r '. | {id} .id'
     )

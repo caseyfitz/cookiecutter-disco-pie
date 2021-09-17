@@ -1,5 +1,6 @@
 import os
 import requests
+import time
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -15,13 +16,20 @@ AWS_REGION = os.getenv("AWS_REGION")
 AWS_SERVICE = "execute-api"
 API_SECURE_ENDPOINT = os.getenv("API_SECURE_ENDPOINT")
 
+TO_SLEEP_SEC = 10
+logger.info(f"Waiting for {TO_SLEEP_SEC} seconds in case not deployed.")
+time.sleep(TO_SLEEP_SEC)
+
 logger.info(f"Attempting to call: {API_SECURE_ENDPOINT}")
 
 # Create the AWS V4 authorization signature needed by the request
 auth = AWS4Auth(AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_SERVICE)
 
 # Invoke each route of the endpoint using the authorization
-for route in ["hello", "goodbye"]:
+for route in [
+    "hello-{{ cookiecutter.service_name.lower() }}", 
+    "goodbye-{{ cookiecutter.service_name.lower() }}",
+    ]:
     logger.info(f"\nInvoking route: {route}\n")
     # NOTE: Each JSON field below is required by the Magnum app: https://mangum.io
     json = {

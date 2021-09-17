@@ -6,8 +6,8 @@ include .env
 
 .PHONY: requirements
 
-LAMBDA_AND_CONTAINER_NAME = hello-lambda
-LAMBDA_ROLE_NAME = lambda-role
+LAMBDA_AND_CONTAINER_NAME = {{ cookiecutter.service_name }}
+LAMBDA_ROLE_NAME = {{ cookiecutter.service_name }}-role
 
 ECR_URI = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 IMAGE_URI = $(ECR_URI)/$(LAMBDA_AND_CONTAINER_NAME)
@@ -15,7 +15,7 @@ AWS_DOCKERFILE_NAME = Dockerfile
 
 
 create_environment:
-	conda create --yes --name $(LAMBDA_AND_CONTAINER_NAME) python=3.8
+	conda create --yes --name {{ cookiecutter.repo_name }} python={{ cookiecutter.python_version_number }}
 
 requirements:
 	pip install -r requirements-dev.txt
@@ -54,7 +54,8 @@ create_lambda_role:
 	--policy-arn arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
 
 create_lambda_function:
-	$(shell sleep 20)
+	echo "wait 10 seconds for role..."	
+	$(shell sleep 10)
 	aws lambda create-function \
 	--function-name $(LAMBDA_AND_CONTAINER_NAME) \
 	--region $(AWS_REGION) \
@@ -63,7 +64,8 @@ create_lambda_function:
 	--role $(shell aws iam get-role --role-name $(LAMBDA_ROLE_NAME) --output json | jq -r '.Role.Arn')
 
 deploy_api:
-	$(shell sleep 20)
+	echo "wait 10 seconds for lambda..."
+	$(shell sleep 10)
 	bash deploy_api.sh \
 	$(LAMBDA_AND_CONTAINER_NAME) \
 	$(shell aws iam get-role --role-name $(LAMBDA_ROLE_NAME) --output json | jq -r '.Role.Arn')
