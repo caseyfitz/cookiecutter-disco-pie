@@ -5,4 +5,4 @@ router = APIRouter()
 
 @router.get("/")
 async def hello():
-    return {"message": "Hello, World"}
+    return {"message": "Hello, {{cookiecutter.service_name}}"}

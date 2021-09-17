@@ -6,8 +6,8 @@ include .env
 
 .PHONY: requirements
 
-LAMBDA_AND_CONTAINER_NAME = hello-lambda
-LAMBDA_ROLE_NAME = lambda-role
+LAMBDA_AND_CONTAINER_NAME = {{ cookiecutter.service_name }}
+LAMBDA_ROLE_NAME = {{ cookiecutter.service_name }}-role
 
 ECR_URI = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 IMAGE_URI = $(ECR_URI)/$(LAMBDA_AND_CONTAINER_NAME)
