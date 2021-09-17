@@ -4,9 +4,9 @@ ___
 
 ## Do I want Cookiecutter DiscoPie?
 
-Ever built a *sik* ML model only to find that it's *stuck* on your stupid laptop, beefy desktop, or ephemeral cloud machine? Do you *need* the world to have access to ur dope deep learning model? Do you *loathe* the idea of navigating the [treacherous waters](https://twitter.com/iamdevloper/status/912185400336232449) of the AWS UI? Do you *insist* on containerizing your code because I mean what else are you doing is this 2015 or something? Do you *require* serverless deployment because what is a server?
+Ever built a *sik* ML model only to find that it's *stuck* on your stupid laptop, beefy desktop, or ephemeral cloud machine? Do you *need* the world to have access to ur dope deep neural net? Do you *require* serverless deployment because what is a server? Do you *insist* on containerizing your code because I mean what else are you doing is this 2015 or something? Do you *loathe* the idea of navigating the [treacherous waters](https://twitter.com/iamdevloper/status/912185400336232449) of the AWS UI?
 
-If you answered "yes" to *every single one* of the above questions, then you've come to right place. Cookiecutter DiscoPie is here to handle all the annoying stuff so you can focus on serving that model, or whatever else people do with REST APIs.
+If you answered "yes" to exactly *every single one* of the above questions, then you've come to right place. Cookiecutter DiscoPie is here to handle all the annoying stuff so you can focus on serving that model, or whatever else people do with REST APIs.
 
 Cookiecutter DiscoPie
 1. *Templatizes* a an API endpoint based on [FastAPI](https://fastapi.tiangolo.com). You just need to call your code from the routes.
