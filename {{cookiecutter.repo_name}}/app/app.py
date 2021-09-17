@@ -42,8 +42,8 @@ app.add_middleware(CorrelationIdMiddleware)
 #   Routers configuration                                                     #
 ###############################################################################
 
-app.include_router(eval("hello_{{ cookiecutter.service_name.lower().replace('-', '-') }}.router"), prefix="/hello", tags=["hello"])
-app.include_router(eval("goodbye_{{ cookiecutter.service_name.lower().replace('-', '-') }}"), prefix="/goodbye", tags=["goodbye"])
+app.include_router(eval("hello_{{ cookiecutter.service_name.lower().replace('-', '_') }}.router"), prefix="/hello", tags=["hello"])
+app.include_router(eval("goodbye_{{ cookiecutter.service_name.lower().replace('-', '_') }}"), prefix="/goodbye", tags=["goodbye"])
 
 ###############################################################################
 #   Handler for AWS Lambda                                                    #
