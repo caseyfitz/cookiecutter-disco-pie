@@ -23,9 +23,9 @@ and points to the `app.app.handler` as the default executable (`CMD`) of the app
 ### Why use FastAPI?
 In principle, the loose coupling between the ASGI application (FastAPI) and the cloud adapter (Magnum) facilitates the explosure of multiple "serverless cloud backends" to a single ASGI application. Ideally, one would need only change the default executable in the associated `Dockerfile`, provided there are Magnum-like ASGI adapters available for the given cloud provider (a big "if"). An ASGI application written in Chalice, on the othr hand, would need to be rewritten in the cloud provider's Chalice-like framework.
 
-## hello-lambda overview
+## {{ cookiecutter.service_name }} overview
 
-The application, container name, lambda function, and API endpoint are referred to as `hello-lambda` throuhgout. The name can be controlled by setting the `LAMBDA_AND_CONTAINER_NAME` variable in the `Makefile`.
+The application, container name, lambda function, and API endpoint are referred to as `{{ cookiecutter.service_name }}` throuhgout. The AWS name can be controlled by setting the `LAMBDA_AND_CONTAINER_NAME` variable in the `Makefile`.
 
 ### Very quick start – auto_deploy
 The automatic deployment program uses the [AWS CLI](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/index.html) to
@@ -64,19 +64,19 @@ The `AmazonAPIGatewayInvokeFullAccess`-enabled credentials need not be the same 
 You will know the example succeeded because the logs will show (API id masked)
 
 ```bash
-2021-09-14 07:58:53.643 | INFO     | __main__:<module>:18 - Attempting to call: https://**********.execute-api.us-west-1.amazonaws.com/test/hello-lambda
+2021-09-14 07:58:53.643 | INFO     | __main__:<module>:18 - Attempting to call: https://**********.execute-api.us-west-1.amazonaws.com/test/{{ cookiecutter.service_name }}
 2021-09-14 07:58:53.643 | INFO     | __main__:<module>:25 - 
-Invoking route: hello
+Invoking route: hello-{{ cookiecutter.service_name }}
 
 2021-09-14 07:58:53.643 | INFO     | __main__:<module>:34 - Authorized request: hello
-2021-09-14 07:58:54.734 | INFO     | __main__:<module>:37 - Succeeded: {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '26', 'content-type': 'application/json', 'x-correlation-id': 'b7206315-032b-4151-ad0f-68db7241f73a'}, 'body': '{"message":"Hello, World"}'}
+2021-09-14 07:58:54.734 | INFO     | __main__:<module>:37 - Succeeded: {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '26', 'content-type': 'application/json', 'x-correlation-id': 'b7206315-032b-4151-ad0f-68db7241f73a'}, 'body': '{"message":"Hello, {{ cookiecutter.service_name }}"}'}
 2021-09-14 07:58:54.734 | INFO     | __main__:<module>:40 - Unauthorized request: hello
 2021-09-14 07:58:54.855 | INFO     | __main__:<module>:43 - Succeeded: {'message': 'Missing Authentication Token'}
 2021-09-14 07:58:54.855 | INFO     | __main__:<module>:25 - 
-Invoking route: goodbye
+Invoking route: goodbye-{{ cookiecutter.service_name }}
 
 2021-09-14 07:58:54.856 | INFO     | __main__:<module>:34 - Authorized request: goodbye
-2021-09-14 07:58:54.986 | INFO     | __main__:<module>:37 - Succeeded: {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '28', 'content-type': 'application/json', 'x-correlation-id': '37b94c1e-1f59-4623-a2d0-908368c4a045'}, 'body': '{"message":"Goodbye, World"}'}
+2021-09-14 07:58:54.986 | INFO     | __main__:<module>:37 - Succeeded: {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '28', 'content-type': 'application/json', 'x-correlation-id': '37b94c1e-1f59-4623-a2d0-908368c4a045'}, 'body': '{"message":"Goodbye, {{ cookiecutter.service_name }}"}'}
 2021-09-14 07:58:54.986 | INFO     | __main__:<module>:40 - Unauthorized request: goodbye
 2021-09-14 07:58:55.085 | INFO     | __main__:<module>:43 - Succeeded: {'message': 'Missing Authentication Token'}
 ```
@@ -86,15 +86,15 @@ Invoking route: goodbye
 The rest of the readme aplains how to deploy the API using the AWS console.
 
 There are two routes
-1. A `GET` request to `/hello` returns "Hello, World"
-2. A `GET` request to `/goodbye` returns "Goodbye, World"
+1. A `GET` request to `/hello-{{ cookiecutter.service_name }}` returns "Hello, {{ cookiecutter.service_name }}"
+2. A `GET` request to `/goodbye-{{ cookiecutter.service_name }}` returns "Goodbye, {{ cookiecutter.service_name }}"
 
-Although both routes invoke FastAPI `router.get` methods, eventually, when calling the routes via the AWS API Gateway, we will make a `POST` request containing (in addition to authorization signatures) `JSON` that specifies the resource, path, and method within the route. For example, the `/hello` route is invoked using a `POST` request containing the following `JSON` (all fields are **required**)
+Although both routes invoke FastAPI `router.get` methods, eventually, when calling the routes via the AWS API Gateway, we will make a `POST` request containing (in addition to authorization signatures) `JSON` that specifies the resource, path, and method within the route. For example, the `/hello-{{ cookiecutter.service_name }}` route is invoked using a `POST` request containing the following `JSON` (all fields are **required**)
 
 ```json
 {
-        "resource": "/hello",
-        "path": "/hello/",
+        "resource": "/hello-{{ cookiecutter.service_name }}",
+        "path": "/hello-{{ cookiecutter.service_name }}/",
         "httpMethod": "GET",
         "multiValueQueryStringParameters": {},
         "requestContext": {}
@@ -128,8 +128,8 @@ See below for more details.
 ## Install dependencies
 
 For local development,
-1. Create the `hello-lambda` environment using `make create_environment`
-2. Activate environment using `conda activate hello-lambda`
+1. Create the `{{ cookiecutter.repo_name }}` environment using `make create_environment`
+2. Activate environment using `conda activate {{ cookiecutter.repo_name }}`
 3. Install development requirements using `make requirements`
 
 
@@ -143,16 +143,16 @@ uvicorn app.app:app --reload --host 0.0.0.0 --port 5000
 
 You can test the application by using the following command: 
 
-The `/hello` route
+The `/hello-{{ cookiecutter.service_name }}` route
 
 ```bash
-curl http://localhost:5000/hello/
+curl http://localhost:5000/hello-{{ cookiecutter.service_name }}/
 ```
 
-The `/goodbye` route
+The `/goodbye-{{ cookiecutter.service_name }}` route
 
 ```bash
-curl http://localhost:5000/goodbye/
+curl http://localhost:5000/goodbye-{{ cookiecutter.service_name }}/
 ```
 
 ## Build and deploy the image to ECR
@@ -174,8 +174,8 @@ We send the input event that the lambda would receive from the API Gateway with 
 ```bash
 curl -POST "http://localhost:9000/2015-03-31/functions/function/invocations" \
 -d '{
-      "resource": "/hello",
-      "path": "/hello/",
+      "resource": "/hello-{{ cookiecutter.service_name }}",
+      "path": "/hello-{{ cookiecutter.service_name }}/",
       "httpMethod": "GET",
       "multiValueQueryStringParameters": {},
       "requestContext": {}
@@ -208,7 +208,7 @@ First, add the trigger
 5. For security, choose "IAM"
 6. Click Add to create the endpoint
 
-If you didn't change the name, you should now have a trigger called `hello-lambda-API`.
+If you didn't change the name, you should now have a trigger called `{{ cookiecutter.service_name }}-API`.
 
 The trigger should now appear in the Lambda page. Click the `Details` drop down to see the full API endpoint and add the full URL (including https) to your `.env` as `API_SECURE_ENDPOINT`.
 
@@ -235,8 +235,8 @@ If you would like to test the endpoint in the console, without the need for auth
 
 ```json
 {
-      "resource": "/hello",  # or /goodbye
-      "path": "/hello/",  # or /goodbye/
+      "resource": "/hello-{{ cookiecutter.service_name }}",  # or /goodbye-{{ cookiecutter.service_name }}
+      "path": "/hello-{{ cookiecutter.service_name }}/",  # or /goodbye-{{ cookiecutter.service_name }}/
       "httpMethod": "GET",
       "multiValueQueryStringParameters": {},
       "requestContext": {}
@@ -254,7 +254,7 @@ You should see a response body like
     "content-type": "application/json",
     "x-correlation-id": "e9179dd6-9d7f-479c-af36-71f63378ad98"
   },
-  "body": "{\"message\":\"Hello, World\"}"
+  "body": "{\"message\":\"Hello, {{ cookiecutter.service_name }}\"}"
 }
 ```
 
@@ -281,7 +281,7 @@ If you have completed all of the steps above, congrats! Your secure, containeriz
 
 To test invoking your endpoint from within a python process, we have included a simple example call using the [Requests](https://docs.python-requests.org/en/master/) library along with [requests_aws4auth](https://github.com/tedder/requests-aws4auth) for generating authorized signatures.
 
-The example calls each route (`/hello` and `/goodbye`) twice. Once with an authorized signature and once without. The response status code is `assert`ed to be `200` in the authorized call, and `403` in the unauthorized call. If you see an assertion errror, it probably means you have skipped one of the above steps or improperly configured your credentials.
+The example calls each route (`/hello-{{ cookiecutter.service_name }}` and `/goodbye-{{ cookiecutter.service_name }}`) twice. Once with an authorized signature and once without. The response status code is `assert`ed to be `200` in the authorized call, and `403` in the unauthorized call. If you see an assertion errror, it probably means you have skipped one of the above steps or improperly configured your credentials.
 
 ### Prerequisites
 The example requires the following environment varaiables (easiest to put in a `.env`)
@@ -301,26 +301,26 @@ API_SECURE_ENDPOINT
 To run the example, from a terminal running your `hello-lambda` environment with all requirements install, execute
 
 ```bash
-(hello-lambda)
-$ python examples/invoke_secure_routes.py
+({{ cookiecutter.repo_name }})
+$ python example.py
 ```
 
 You should see the following logged output
 
 ```bash
 2021-09-12 13:37:52.386 | INFO     | __main__:<module>:23 - 
-Invoking route: hello
+Invoking route: hello-{{ cookiecutter.service_name }}
 
 2021-09-12 13:37:52.386 | INFO     | __main__:<module>:32 - Authorized request: hello
-2021-09-12 13:37:53.587 | INFO     | __main__:<module>:35 - {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '26', 'content-type': 'application/json', 'x-correlation-id': '9a972d54-fd2f-454b-a7a7-9e8534dbb133'}, 'body': '{"message":"Hello, World"}'}
-2021-09-12 13:37:53.587 | INFO     | __main__:<module>:38 - Unauthorized request: hello
+2021-09-12 13:37:53.587 | INFO     | __main__:<module>:35 - {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '26', 'content-type': 'application/json', 'x-correlation-id': '9a972d54-fd2f-454b-a7a7-9e8534dbb133'}, 'body': '{"message":"Hello, {{ cookiecutter.service_name }}"}'}
+2021-09-12 13:37:53.587 | INFO     | __main__:<module>:38 - Unauthorized request: hello-{{ cookiecutter.service_name }}
 2021-09-12 13:37:53.664 | INFO     | __main__:<module>:41 - {'message': 'Missing Authentication Token'}
 2021-09-12 13:37:53.664 | INFO     | __main__:<module>:23 - 
-Invoking route: goodbye
+Invoking route: goodbye-{{ cookiecutter.service_name }}
 
 2021-09-12 13:37:53.664 | INFO     | __main__:<module>:32 - Authorized request: goodbye
-2021-09-12 13:37:53.767 | INFO     | __main__:<module>:35 - {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '28', 'content-type': 'application/json', 'x-correlation-id': '71866237-1bfd-4fb1-98c5-7119a675b01d'}, 'body': '{"message":"Goodbye, World"}'}
-2021-09-12 13:37:53.767 | INFO     | __main__:<module>:38 - Unauthorized request: goodbye
+2021-09-12 13:37:53.767 | INFO     | __main__:<module>:35 - {'isBase64Encoded': False, 'statusCode': 200, 'headers': {'content-length': '28', 'content-type': 'application/json', 'x-correlation-id': '71866237-1bfd-4fb1-98c5-7119a675b01d'}, 'body': '{"message":"Goodbye, {{ cookiecutter.service_name }}"}'}
+2021-09-12 13:37:53.767 | INFO     | __main__:<module>:38 - Unauthorized request: goodbye-{{ cookiecutter.service_name }}
 2021-09-12 13:37:53.857 | INFO     | __main__:<module>:41 - {'message': 'Missing Authentication Token'}
 ```
 

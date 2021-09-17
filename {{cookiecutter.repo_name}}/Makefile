@@ -15,7 +15,7 @@ AWS_DOCKERFILE_NAME = Dockerfile
 
 
 create_environment:
-	conda create --yes --name $(LAMBDA_AND_CONTAINER_NAME) python=3.8
+	conda create --yes --name {{ cookiecutter.repo_name }} python={{ cookiecutter.python_version_number }}
 
 requirements:
 	pip install -r requirements-dev.txt
