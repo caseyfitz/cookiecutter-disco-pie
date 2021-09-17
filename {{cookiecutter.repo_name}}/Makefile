@@ -54,7 +54,8 @@ create_lambda_role:
 	--policy-arn arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
 
 create_lambda_function:
-	$(shell sleep 20)
+	echo "wait 10 seconds for role..."	
+	$(shell sleep 10)
 	aws lambda create-function \
 	--function-name $(LAMBDA_AND_CONTAINER_NAME) \
 	--region $(AWS_REGION) \
@@ -63,7 +64,8 @@ create_lambda_function:
 	--role $(shell aws iam get-role --role-name $(LAMBDA_ROLE_NAME) --output json | jq -r '.Role.Arn')
 
 deploy_api:
-	$(shell sleep 20)
+	echo "wait 10 seconds for lambda..."
+	$(shell sleep 10)
 	bash deploy_api.sh \
 	$(LAMBDA_AND_CONTAINER_NAME) \
 	$(shell aws iam get-role --role-name $(LAMBDA_ROLE_NAME) --output json | jq -r '.Role.Arn')
