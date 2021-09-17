@@ -1,4 +1,4 @@
-# Cookiecutter Deployment Inside Serverless Containers of Python-Integrated Endpoints
+# Cookiecutter DiscoPie: Deployment Inside Serverless Containers of Python-Integrated Endpoints
 ***Dread deploying your API? Use Cookiecutter DiscoPie!***
 ___
 
