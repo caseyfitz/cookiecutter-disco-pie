@@ -9,7 +9,7 @@ Ever built a *sik* ML model only to find that it's *stuck* on your stupid laptop
 If you answered "yes" to *every single one* of the above questions, then you've come to right place. Cookiecutter DiscoPie is here to handle all the annoying stuff so you can focus on serving that model, or whatever else people do with REST APIs.
 
 Cookiecutter DiscoPie
-1. *Templatizes* a an API endpoint based on [FastAPI](https://fastapi.tiangolo.com). You just need to import the code.
+1. *Templatizes* a an API endpoint based on [FastAPI](https://fastapi.tiangolo.com). You just need to call your code from the routes.
 2. *Containerizes* the service and provides commands for local interaction.
 3. *Deploys* the container as a serverless REST endpoint (currently only on AWS, but we have a vision).
 
