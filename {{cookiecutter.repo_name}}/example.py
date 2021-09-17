@@ -21,7 +21,10 @@ logger.info(f"Attempting to call: {API_SECURE_ENDPOINT}")
 auth = AWS4Auth(AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_SERVICE)
 
 # Invoke each route of the endpoint using the authorization
-for route in ["hello", "goodbye"]:
+for route in [
+    "hello-{{ cookiecutter.service_name.lower() }}", 
+    "goodbye-{{ cookiecutter.service_name.lower() }}",
+    ]:
     logger.info(f"\nInvoking route: {route}\n")
     # NOTE: Each JSON field below is required by the Magnum app: https://mangum.io
     json = {

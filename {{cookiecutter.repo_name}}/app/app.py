@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from mangum import Mangum
 
-from app.routes import hello_world, goodbye_world
+from app.routes import hello_{{ cookiecutter.service_name.lower().replace('-', '_') }}, goodbye_{{ cookiecutter.service_name.lower().replace('-', '_') }}
 from app.monitoring import logging_config
 from app.middlewares.correlation_id_middleware import CorrelationIdMiddleware
 from app.middlewares.logging_middleware import LoggingMiddleware
@@ -42,8 +42,16 @@ app.add_middleware(CorrelationIdMiddleware)
 #   Routers configuration                                                     #
 ###############################################################################
 
-app.include_router(eval("hello_{{ cookiecutter.service_name.lower().replace('-', '_') }}.router"), prefix="/hello", tags=["hello"])
-app.include_router(eval("goodbye_{{ cookiecutter.service_name.lower().replace('-', '_') }}"), prefix="/goodbye", tags=["goodbye"])
+app.include_router(
+    hello_{{ cookiecutter.service_name.lower().replace('-', '_') }}.router, 
+    prefix="/hello-{{ cookiecutter.service_name.lower()}}", 
+    tags=["hello"]
+    )
+app.include_router(
+    goodbye_{{ cookiecutter.service_name.lower().replace('-', '_') }}.router, 
+    prefix="/goodbye-{{ cookiecutter.service_name.lower() }}", 
+    tags=["goodbye"]
+    )
 
 ###############################################################################
 #   Handler for AWS Lambda                                                    #
