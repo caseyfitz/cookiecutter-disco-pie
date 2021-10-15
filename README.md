@@ -9,9 +9,9 @@ Ever built a *sik* ML model only to find that it's *stuck* on your stupid laptop
 If you answered "yes" to exactly *every single one* of the above questions, then you've come to right place. Cookiecutter DiscoPie is here to handle all the annoying stuff so you can focus on serving that model, or whatever else people do with REST APIs.
 
 Cookiecutter DiscoPie
-1. *Templatizes* a an API endpoint based on [FastAPI](https://fastapi.tiangolo.com). You just need to call your code from the routes.
+1. *Templatizes* an API endpoint based on [FastAPI](https://fastapi.tiangolo.com). You just need to call your code from the routes.
 2. *Containerizes* the service and provides commands for local interaction.
-3. *Deploys* the container as a serverless REST endpoint (currently only on AWS, but we have a vision).
+3. *Deploys* the container as a serverless REST endpoint (currently only on AWS, but we have a vision!).
 
 ## Do I *need* Cookiecutter DiscoPie?
 
@@ -20,6 +20,16 @@ Probably not. There are other ways to do this. But they either [don't support co
 Plus, our FastAPI-based design means there's hope for supporting multiple serverless cloud backends (huge caveat: there needs to exist an ASGI [adapter](https://github.com/jordaneremieff/mangum) for each).
 
 Just try it, you nerd!
+
+
+## Install it:
+
+All you gotta do is fork this repo, navigate to the right dir and use pip to install the DiscoPie command line tool, easy.
+
+```
+cd /cookiecutter-disco-pie
+pip install .
+```
 
 ## To create a new API, run:
 ```
